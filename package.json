@@ -1,0 +1,45 @@
+{
+  "name": "muse-player",
+  "productName": "MUSE",
+  "version": "1.0.0",
+  "description": "Aesthetic Local Music Library, Offline Player with 9-Band EQ & Smart Audio Intelligence",
+  "main": "src/main.js",
+  "author": "Jimsipelaut",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win",
+    "build:portable": "electron-builder --win portable",
+    "dist": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.jimsipelaut.muse",
+    "productName": "MUSE",
+    "copyright": "Copyright © 2026 Jimsipelaut",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MUSE Music Player"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  }
+}
