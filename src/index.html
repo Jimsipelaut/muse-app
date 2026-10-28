@@ -847,7 +847,7 @@
   }
   /** Removes extensions, upload noise and bracketed junk, while keeping (feat. …), (Remix), (Live) etc. */
   function cleanFilename(name) {
-    let s = deslug(String(name || '').replace(AUDIO_EXT, ''));
+    let s = deslug(String(name || '').normalize('NFKD').replace(AUDIO_EXT, ''));
     s = s.replace(/_/g, ' ');
     if (!/\s/.test(s)) s = s.replace(/\+/g, ' ');
     s = s.replace(/^\s*[\[(]?(?:www\.)?[\w-]+\.(?:com|net|org|io|cc|me|to|fm|ru|app)[\])]?\s*[-–—:|]*\s+/i, '');
@@ -857,9 +857,10 @@
     s = s.replace(/^\s*\d{1,3}\s*[.\-–]\s+(?=\S)/, '');
     s = s.replace(/\s+official\s+(?:music\s+video|lyrics?\s+video|audio|video|visuali[sz]er|lyrics?)\s*$/i, '');
     s = s.replace(/\s*[-–—|]\s*(?:official\s+)?(?:music\s+video|lyrics?\s+video|visuali[sz]er)\s*$/i, '');
+    s = s.replace(/\s+(?:hd|hq|4k|audio|video|lyrics?|visuali[sz]er)\s*$/i, '');
     const bare = /\s*[-–—|]\s*(?:audio|lyrics?|video)\s*$/i;
     if (bare.test(s) && s.split(/\s+[-–—|]\s+/).length >= 3) s = s.replace(bare, '');
-    if (/\s[-–—|]\s/.test(s)) s = s.replace(/\s+(?:lyrics?|lyrics? video|lyric video)\s*$/i, '');
+    if (/\s[-–—|]\s/.test(s) || /[-–—|]/.test(s)) s = s.replace(/\s+(?:lyrics?|lyrics? video|lyric video)\s*$/i, '');
     s = s.replace(/\s*[-–—|:]+\s*$/, '').replace(/^\s*[-–—|:]+\s*/, '');
     s = s.replace(/\s+/g, ' ').trim();
     if (!/[(\[]/.test(s)) s = s.replace(/\s+(?:feat\.?|ft\.?|featuring)\s+(.+)$/i, ' (feat. $1)');
@@ -874,9 +875,9 @@
   function parseFilename(name) {
     const cleaned = cleanFilename(name) || 'Untitled track';
     let parts = cleaned.split(/\s+[-–—|]\s+/).map(x => x.trim()).filter(Boolean);
-    if (parts.length === 1 && !/\s/.test(cleaned)) {
-      const m = cleaned.split('-');
-      if (m.length === 2 && m[0] && m[1]) parts = m;
+    if (parts.length === 1) {
+      const flex = cleaned.split(/\s*[-–—|]\s*/).map(x => x.trim()).filter(Boolean);
+      if (flex.length >= 2) parts = flex;
     }
     if (parts.length < 2) return { cleaned, primary: { artist: '', title: cleaned }, swapped: null };
     return {
@@ -2477,6 +2478,7 @@
   }
   const tagLibReady = (async () => {
     if (window.jsmediatags) return true;
+    if (await loadScript('vendor/jsmediatags.min.js') && window.jsmediatags) return true;
     const urls = ['https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js'];
     for (const u of urls) { if (await loadScript(u) && window.jsmediatags) return true; }
     return false;

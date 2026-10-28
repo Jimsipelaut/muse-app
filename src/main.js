@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell } = require('electron');
+const { app, BrowserWindow, shell, session } = require('electron');
 const path = require('path');
 
 let mainWindow = null;
@@ -53,6 +53,29 @@ if (!gotTheLock) {
   });
 
   app.whenReady().then(() => {
+    const APP_USER_AGENT = 'MUSE/1.0.0 (https://github.com/Jimsipelaut/muse-app)';
+
+    // Set compliant User-Agent and remove file:// origin for external music/lyrics APIs
+    session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+      details.requestHeaders['User-Agent'] = APP_USER_AGENT;
+      if (details.requestHeaders['Origin'] === 'file://' || details.requestHeaders['origin'] === 'file://') {
+        delete details.requestHeaders['Origin'];
+        delete details.requestHeaders['origin'];
+      }
+      callback({ cancel: false, requestHeaders: details.requestHeaders });
+    });
+
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Access-Control-Allow-Origin': ['*'],
+          'Access-Control-Allow-Methods': ['GET, POST, OPTIONS, PUT, DELETE'],
+          'Access-Control-Allow-Headers': ['*']
+        }
+      });
+    });
+
     createWindow();
 
     app.on('activate', () => {
